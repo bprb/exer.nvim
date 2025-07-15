@@ -1,0 +1,34 @@
+[[exer.acts]]
+id = "lua_check"
+cmd = "lua -l ${name} -e 'print(\"Module loaded successfully\")'"
+desc = "Check Lua module syntax"
+when = "lua"
+
+[[exer.acts]]
+id = "lua_run"
+cmd = "lua ${file}"
+desc = "Run Lua file"
+when = "lua"
+
+# === StyLua Formatting ===
+[[exer.acts]]
+id = "stylua_check"
+cmd = "stylua --check ${file}"
+desc = "Check Lua format"
+when = "lua"
+
+[[exer.acts]]
+id = "stylua_format"
+cmd = "stylua ${file}"
+desc = "Format Lua file"
+when = "lua"
+
+[[exer.acts]]
+id = "stylua_all"
+cmd = [
+  "echo 'Starting to format all Lua files...'",
+  "find . -name '*.lua' -not -path './node_modules/*' | xargs stylua",
+  "echo 'Formatting completed!'"
+]
+desc = "Format all Lua files"
+env = { STYLUA_CONFIG = "stylua.toml" }

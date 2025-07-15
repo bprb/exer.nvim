@@ -1,0 +1,8 @@
+{
+  "diagnostics": {
+    "disable": [
+      "need-check-nil",
+      "unused-local"
+    ]
+  }
+}
