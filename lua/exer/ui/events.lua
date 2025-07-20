@@ -12,20 +12,23 @@ local state = {
   activeTabIndex = 1,
 }
 
-local function focus(taskId)
-  if state.focusId ~= taskId then
-    state.focusId = taskId
-    M.addTab(taskId)
-    if taskId and windows.isValid('panel') then
-      local curBuf = vim.api.nvim_win_get_buf(windows.palW)
-      local bufName = vim.api.nvim_buf_get_name(curBuf)
+local function focus(taskId, forceUpdate)
+  local co = require('exer.core')
+  co.lg.debug('focus() called with taskId: ' .. tostring(taskId) .. ', current focusId: ' .. tostring(state.focusId) .. ', forceUpdate: ' .. tostring(forceUpdate), 'Events')
 
-      if bufName:match('Task Panel') or not windows.isValidBuf('panel') or curBuf ~= windows.palB then
-        M.showTaskPanel(taskId)
-      else
-        render.renderPanel(taskId, state.autoScroll)
-      end
+  if state.focusId ~= taskId or forceUpdate then
+    state.focusId = taskId
+    -- Remember last focused task globally
+    if taskId then _G.g_exer_last_focused_task = taskId end
+    M.addTab(taskId)
+    if taskId then
+      -- Always show task panel when focusing a task
+      M.showTaskPanel(taskId)
+    else
+      co.lg.debug('taskId is nil, not showing panel', 'Events')
     end
+  else
+    co.lg.debug('taskId same as current focusId, skipping', 'Events')
   end
 end
 
@@ -143,13 +146,21 @@ function M.cleanup()
 end
 
 function M.showTaskPanel(tid, autoFocus)
+  local co = require('exer.core')
+  co.lg.debug('showTaskPanel called with tid: ' .. tostring(tid), 'Events')
+
   state.focusId = tid
-  if not windows.isValidBuf('panel') then windows.createPanelBuffer(tid) end
+  -- Always create/update panel buffer for the specific task
+  local buf = windows.createPanelBuffer(tid)
+  co.lg.debug('Panel buffer created/updated: ' .. tostring(buf), 'Events')
+
   render.renderPanel(tid, state.autoScroll)
+  co.lg.debug('renderPanel called for tid: ' .. tostring(tid), 'Events')
+
   if autoFocus then windows.focus('panel') end
 end
 
-function M.setFocusTask(taskId) focus(taskId) end
+function M.setFocusTask(taskId, forceUpdate) focus(taskId, forceUpdate) end
 
 function M.getFocusTask() return state.focusId end
 

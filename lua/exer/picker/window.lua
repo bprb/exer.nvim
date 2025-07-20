@@ -3,14 +3,40 @@ local M = {}
 -- Border color configuration
 local BORDER_COLOR = 'DiagnosticWarn'
 
-local function calcWinListOpts(cntOpts)
-  local wWin = 66
+local function calcWinListOpts(cntOpts, opts)
+  local minWidth = 66
+  local maxWidthRatio = 0.68
+  local minHeight = 10
+  local maxHeightRatio = 0.60
   local itmMax = 15
-  local itmActual = math.min(cntOpts, itmMax)
-  local hWin = itmActual + 1
 
+  -- Calculate optimal width based on content
+  local maxContentWidth = minWidth
+  if opts then
+    for _, opt in ipairs(opts) do
+      if opt and opt.text and opt.value ~= 'separator' then
+        -- Format: "  1 Type   text                desc"
+        local typeStr = opt.type or ''
+        local textStr = opt.text or ''
+        local descStr = opt.desc or ''
+        -- 3 (num) + 1 (space) + 6 (type) + 3 (spaces) + text + 2 (spaces) + desc
+        local lineWidth = 15 + vim.fn.strdisplaywidth(textStr) + vim.fn.strdisplaywidth(descStr)
+        maxContentWidth = math.max(maxContentWidth, lineWidth)
+      end
+    end
+  end
+
+  -- Apply constraints
   local wEditor = vim.o.columns
   local hEditor = vim.o.lines
+  local maxWidth = math.floor(wEditor * maxWidthRatio)
+  local wWin = math.min(math.max(maxContentWidth + 4, minWidth), maxWidth) -- +4 for borders and padding
+
+  -- Calculate height
+  local itmActual = math.min(cntOpts, itmMax)
+  local hWin = math.max(itmActual + 1, minHeight)
+  local maxHeight = math.floor(hEditor * maxHeightRatio)
+  hWin = math.min(hWin, maxHeight)
 
   local hTotal = hWin + 3
   local row = math.floor((hEditor - hTotal) / 2)
@@ -51,8 +77,8 @@ local function calcWinInputOpts(cfgWinLst)
   }
 end
 
-function M.createListWindow(cntOpts)
-  local listWinOpts = calcWinListOpts(cntOpts)
+function M.createListWindow(cntOpts, opts)
+  local listWinOpts = calcWinListOpts(cntOpts, opts)
 
   local listBuf = vim.api.nvim_create_buf(false, true)
   vim.bo[listBuf].buftype = 'nofile'

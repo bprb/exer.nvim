@@ -18,7 +18,7 @@ function M.pick(config)
 
   filter.filterOpts()
 
-  local listBuf, listWin, listWinOpts = window.createListWindow(#opts)
+  local listBuf, listWin, listWinOpts = window.createListWindow(#opts, opts)
   local inputBuf, inputWin = window.createInputWindow(listWinOpts)
 
   state.ste.listBuf = listBuf
@@ -138,7 +138,6 @@ function M.show()
       local executor = require('exer.proj.executor')
       local act = item.act
 
-      -- 記錄 compound task id 用於 redo
       if act.cmds and type(act.cmds) == 'table' and #act.cmds > 1 then
         _G.g_exer_last_compound_id = act.id
       else
@@ -148,7 +147,7 @@ function M.show()
       executor.executeAct(act, projActs)
     else
       -- Execute mods task (languages, build tools, test frameworks)
-      _G.g_exer_last_compound_id = nil  -- mods 任務不是 compound
+      _G.g_exer_last_compound_id = nil -- mods not compound
       local ok, ex = pcall(mods.runAct, item.value)
       if not ok then co.utils.msg('Failed to execute action: ' .. tostring(ex), vim.log.levels.ERROR) end
     end

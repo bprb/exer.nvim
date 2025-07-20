@@ -182,9 +182,7 @@ function M.filterOpts()
 
   -- Sort by score (highest first), but preserve original order when scores are equal
   table.sort(candidateOpts, function(a, b)
-    if a.score == b.score then
-      return (a.opt.originalIdx or 0) < (b.opt.originalIdx or 0)
-    end
+    if a.score == b.score then return (a.opt.originalIdx or 0) < (b.opt.originalIdx or 0) end
     return a.score > b.score
   end)
 

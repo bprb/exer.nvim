@@ -192,15 +192,19 @@ function M.setupListKeymaps(buffer)
     if windows.isValid('panel') then windows.focus('panel') end
   end, opts)
 
-  -- Mouse click: Update panel content
+  -- Mouse click: Focus window and update panel content
   vim.keymap.set('n', '<LeftMouse>', function()
-    -- Use nvim_win_set_cursor instead of normal! command to avoid modifiable issues
     local pos = vim.fn.getmousepos()
-    if pos.winid == vim.api.nvim_get_current_win() and pos.line > 0 then
-      -- Always set cursor to column 0
-      vim.api.nvim_win_set_cursor(0, { pos.line, 0 })
+    if pos.winid > 0 and vim.api.nvim_win_is_valid(pos.winid) then
+      -- Focus the window under mouse
+      vim.api.nvim_set_current_win(pos.winid)
+
+      if pos.line > 0 then
+        -- Always set cursor to column 0
+        vim.api.nvim_win_set_cursor(0, { pos.line, 0 })
+        updatePanelFromCursor()
+      end
     end
-    updatePanelFromCursor()
   end, opts)
 
   -- Smart navigation
@@ -263,6 +267,65 @@ function M.setupPanelKeymaps(buffer)
     co.utils.msg('Auto scroll: ' .. (autoScroll and 'ON' or 'OFF'))
     windows.updateScrollStatus()
   end, opts)
+
+  -- Mouse click: Focus window, set cursor position and disable auto scroll
+  vim.keymap.set('n', '<LeftMouse>', function()
+    local pos = vim.fn.getmousepos()
+    if pos.winid > 0 and vim.api.nvim_win_is_valid(pos.winid) then
+      -- Focus the window under mouse
+      vim.api.nvim_set_current_win(pos.winid)
+
+      if pos.line > 0 then
+        local maxLine = vim.api.nvim_buf_line_count(0)
+        if pos.line <= maxLine then
+          vim.api.nvim_win_set_cursor(0, { pos.line, pos.column - 1 })
+          -- Disable auto scroll when user clicks
+          if events.getAutoScroll() then
+            events.toggleAutoScroll()
+            co.utils.msg('Auto scroll: OFF (manual interaction)')
+            windows.updateScrollStatus()
+          end
+        end
+      end
+    end
+  end, opts)
+
+  -- Double click: Select word
+  vim.keymap.set('n', '<2-LeftMouse>', function()
+    local pos = vim.fn.getmousepos()
+    if pos.winid == vim.api.nvim_get_current_win() and pos.line > 0 then
+      local maxLine = vim.api.nvim_buf_line_count(0)
+      if pos.line <= maxLine then
+        vim.api.nvim_win_set_cursor(0, { pos.line, pos.column - 1 })
+        vim.cmd('normal! viw')
+      end
+    end
+  end, opts)
+
+  -- Mouse drag: Visual selection
+  vim.keymap.set('n', '<LeftDrag>', function()
+    -- Start visual mode if not already in it
+    local mode = vim.fn.mode()
+    if mode ~= 'v' and mode ~= 'V' then vim.cmd('normal! v') end
+    -- Move cursor to mouse position
+    local pos = vim.fn.getmousepos()
+    if pos.winid == vim.api.nvim_get_current_win() and pos.line > 0 then
+      local maxLine = vim.api.nvim_buf_line_count(0)
+      if pos.line <= maxLine then vim.api.nvim_win_set_cursor(0, { pos.line, pos.column - 1 }) end
+    end
+  end, opts)
+
+  -- Also map in visual mode to continue selection
+  vim.keymap.set('v', '<LeftDrag>', function()
+    local pos = vim.fn.getmousepos()
+    if pos.winid == vim.api.nvim_get_current_win() and pos.line > 0 then
+      local maxLine = vim.api.nvim_buf_line_count(0)
+      if pos.line <= maxLine then vim.api.nvim_win_set_cursor(0, { pos.line, pos.column - 1 }) end
+    end
+  end, opts)
+
+  -- Mouse release: Stay in visual mode
+  vim.keymap.set('v', '<LeftRelease>', '<Nop>', opts)
 
   -- Tab: Switch to list
   vim.keymap.set('n', '<Tab>', function()

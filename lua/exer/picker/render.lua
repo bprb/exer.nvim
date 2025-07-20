@@ -49,7 +49,23 @@ local function renderList()
         local textStr = opt.text or ''
         local descStr = opt.desc or ''
         local displayNum = opt.originalNum or currentValidIdx
-        local line = string.format('%3d %-6s %-20s%s', displayNum, typeStr, textStr, descStr)
+
+        -- Calculate dynamic spacing based on window width
+        local winWidth = 66 -- Default
+        if state.isListWinValid() then winWidth = vim.api.nvim_win_get_width(ste.listWin) end
+
+        local typeWidth = 6
+        local numWidth = 3
+        local minSpacing = 2
+        local textMaxWidth = math.floor((winWidth - numWidth - typeWidth - minSpacing * 3) * 0.4)
+
+        -- Format with dynamic widths
+        local line
+        if descStr ~= '' then
+          line = string.format('%3d %-6s %-' .. textMaxWidth .. 's  %s', displayNum, typeStr, textStr:sub(1, textMaxWidth), descStr)
+        else
+          line = string.format('%3d %-6s %s', displayNum, typeStr, textStr)
+        end
 
         if currentValidIdx == ste.selectedIdx then
           line = '►' .. line:sub(2)
@@ -112,19 +128,40 @@ local function renderList()
             hl_group = 'Keyword',
           })
 
-          -- Find description part (starts with " - ")
-          local descPos = line:find(' %- ')
-          if descPos then
-            -- Text part (between type and description)
-            vim.api.nvim_buf_set_extmark(ste.listBuf, syntaxNs, lineIdx, actualTypeEnd, {
-              end_col = descPos,
-              hl_group = 'Normal',
-            })
-            -- Description part (from " - " to end)
-            vim.api.nvim_buf_set_extmark(ste.listBuf, syntaxNs, lineIdx, descPos, {
-              end_col = #line,
-              hl_group = 'Comment',
-            })
+          -- Find description part (after text, with double space)
+          local afterType = line:sub(actualTypeEnd + 1)
+          local textMatch = afterType:match('^%s*(%S+)')
+          if textMatch then
+            local textPos = afterType:find(textMatch, 1, true)
+            if textPos then
+              local textEnd = actualTypeEnd + textPos + #textMatch - 1
+              -- Look for double space that indicates description start
+              local descStart = line:find('  ', textEnd)
+              if descStart then
+                -- Text part (between type and description)
+                vim.api.nvim_buf_set_extmark(ste.listBuf, syntaxNs, lineIdx, actualTypeEnd, {
+                  end_col = descStart,
+                  hl_group = 'Normal',
+                })
+                -- Description part (from double space to end)
+                vim.api.nvim_buf_set_extmark(ste.listBuf, syntaxNs, lineIdx, descStart, {
+                  end_col = #line,
+                  hl_group = 'Comment',
+                })
+              else
+                -- No description, just highlight rest as normal
+                vim.api.nvim_buf_set_extmark(ste.listBuf, syntaxNs, lineIdx, actualTypeEnd, {
+                  end_col = #line,
+                  hl_group = 'Normal',
+                })
+              end
+            else
+              -- Fallback if text position not found
+              vim.api.nvim_buf_set_extmark(ste.listBuf, syntaxNs, lineIdx, actualTypeEnd, {
+                end_col = #line,
+                hl_group = 'Normal',
+              })
+            end
           else
             -- No description, just highlight rest as normal
             vim.api.nvim_buf_set_extmark(ste.listBuf, syntaxNs, lineIdx, actualTypeEnd, {
@@ -152,8 +189,20 @@ local function renderList()
           local nameInText = line:find(fieldValue, 1, true)
           if nameInText then return 11 end
         elseif fieldName == 'desc' then
-          local descPos = line:find(' %- ')
-          if descPos then return descPos + 3 end
+          -- Line format: "  1 Type   text              desc"
+          -- Find last occurrence of double space which should be before desc
+          local lastDoubleSpace = nil
+          local pos = 1
+          while true do
+            local found = line:find('  ', pos)
+            if not found then break end
+            lastDoubleSpace = found
+            pos = found + 1
+          end
+          if lastDoubleSpace then
+            -- Skip the double space to get to desc start
+            return lastDoubleSpace + 2
+          end
         end
         return nil
       end
@@ -166,6 +215,7 @@ local function renderList()
           vim.api.nvim_buf_set_extmark(ste.listBuf, matchNs, lineNumber, matchStart, {
             end_col = matchEnd,
             hl_group = 'IncSearch',
+            priority = 10, -- Lower priority to not override syntax highlights
           })
         end
       elseif opt.matchType == 'fuzzy' and opt.matchPositions and opt.matchField then
@@ -176,6 +226,7 @@ local function renderList()
             vim.api.nvim_buf_set_extmark(ste.listBuf, matchNs, lineNumber, actualPos, {
               end_col = actualPos + 1,
               hl_group = 'Search',
+              priority = 10, -- Lower priority to not override syntax highlights
             })
           end
         end
@@ -186,6 +237,7 @@ local function renderList()
           vim.api.nvim_buf_set_extmark(ste.listBuf, matchNs, lineNumber, numStart - 1, {
             end_col = numEnd - 1,
             hl_group = 'WarningMsg',
+            priority = 10, -- Lower priority to not override syntax highlights
           })
         end
       end
@@ -233,7 +285,9 @@ local function renderInput()
   local lineStatus = string.format('%d/%d', math.min(ste.selectedIdx, optsValid), optsValid)
   if optsValid > 15 then lineStatus = lineStatus .. string.format(' [%d-%d]', ste.scrollOffset + 1, math.min(ste.scrollOffset + 15, optsValid)) end
   local dispQuery = '> ' .. ste.query
-  local padding = math.max(1, 66 - #dispQuery - #lineStatus)
+  local inputWinWidth = 66 -- Default
+  if state.isInputWinValid() then inputWinWidth = vim.api.nvim_win_get_width(ste.inputWin) end
+  local padding = math.max(1, inputWinWidth - #dispQuery - #lineStatus)
   local lnInput = dispQuery .. string.rep(' ', padding) .. lineStatus
 
   vim.bo[ste.inputBuf].modifiable = true

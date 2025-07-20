@@ -18,7 +18,29 @@ function M.showList(skipFocusList)
     if not skipFocusList then wins.focus('list') end
 
     local tasks = co.tsk.getAll()
-    if #tasks > 0 and not evts.getFocusTask() then evts.setFocusTask(tasks[1].id) end
+    co.lg.debug('UI already exists, task count: ' .. #tasks, 'UI')
+    co.lg.debug('Current focus task: ' .. tostring(evts.getFocusTask()), 'UI')
+
+    if #tasks > 0 and not evts.getFocusTask() then
+      local taskToFocus = nil
+
+      -- Try to restore last focused task
+      if _G.g_exer_last_focused_task then
+        co.lg.debug('Last focused task ID: ' .. tostring(_G.g_exer_last_focused_task), 'UI')
+        for _, task in ipairs(tasks) do
+          if task.id == _G.g_exer_last_focused_task then
+            taskToFocus = task.id
+            break
+          end
+        end
+      end
+
+      -- If last focused task not found, select first task
+      if not taskToFocus then taskToFocus = tasks[1].id end
+
+      co.lg.debug('Setting focus to task: ' .. tostring(taskToFocus), 'UI')
+      evts.setFocusTask(taskToFocus)
+    end
 
     return
   end
@@ -43,9 +65,31 @@ function M.showList(skipFocusList)
 
   evts.startTimer()
 
-  if cfgs.auto_toggle then
-    local tasks = co.tsk.getAll()
-    if #tasks > 0 then evts.setFocusTask(tasks[1].id) end
+  -- Auto focus last selected task or first available task
+  local tasks = co.tsk.getAll()
+  co.lg.debug('UI first creation, task count: ' .. #tasks, 'UI')
+
+  if #tasks > 0 then
+    local taskToFocus = nil
+
+    -- Try to restore last focused task
+    if _G.g_exer_last_focused_task then
+      co.lg.debug('Last focused task ID: ' .. tostring(_G.g_exer_last_focused_task), 'UI')
+      for _, task in ipairs(tasks) do
+        if task.id == _G.g_exer_last_focused_task then
+          taskToFocus = task.id
+          break
+        end
+      end
+    end
+
+    -- If last focused task not found, select first task
+    if not taskToFocus then taskToFocus = tasks[1].id end
+
+    co.lg.debug('Setting focus to task (first creation): ' .. tostring(taskToFocus), 'UI')
+    evts.setFocusTask(taskToFocus, true) -- Force update on UI creation
+  else
+    co.lg.debug('No tasks available', 'UI')
   end
 end
 
