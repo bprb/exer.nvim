@@ -8,8 +8,6 @@ local state = {
   autoCmdGrp = nil,
   focusId = nil,
   autoScroll = true,
-  taskTabs = {},
-  activeTabIndex = 1,
 }
 
 local function focus(taskId, forceUpdate)
@@ -20,7 +18,6 @@ local function focus(taskId, forceUpdate)
     state.focusId = taskId
     -- Remember last focused task globally
     if taskId then _G.g_exer_last_focused_task = taskId end
-    M.addTab(taskId)
     if taskId then
       -- Always show task panel when focusing a task
       M.showTaskPanel(taskId)
@@ -174,59 +171,5 @@ function M.getAutoScroll() return state.autoScroll end
 function M.setAutoScroll(enabled) state.autoScroll = enabled end
 
 function M.clearFocus() state.focusId = nil end
-
-function M.addTab(taskId)
-  for _, tabId in ipairs(state.taskTabs) do
-    if tabId == taskId then return end
-  end
-  table.insert(state.taskTabs, taskId)
-  state.activeTabIndex = #state.taskTabs
-end
-
-function M.removeTab(taskId)
-  for i, tabId in ipairs(state.taskTabs) do
-    if tabId == taskId then
-      table.remove(state.taskTabs, i)
-      if state.activeTabIndex > #state.taskTabs then state.activeTabIndex = math.max(1, #state.taskTabs) end
-      if state.activeTabIndex == i and #state.taskTabs > 0 then state.focusId = state.taskTabs[state.activeTabIndex] end
-      break
-    end
-  end
-end
-
-function M.switchTab(index)
-  if index > 0 and index <= #state.taskTabs then
-    state.activeTabIndex = index
-    state.focusId = state.taskTabs[index]
-    return state.focusId
-  end
-  return nil
-end
-
-function M.getTaskTabs() return state.taskTabs end
-
-function M.getActiveTabIndex() return state.activeTabIndex end
-
-function M.hasMultipleTabs() return #state.taskTabs > 1 end
-
-function M.handleClearedTasks()
-  local clearedTasks = {}
-  for i = #state.taskTabs, 1, -1 do
-    local taskId = state.taskTabs[i]
-    local tsk = co.tsk.get(taskId)
-    if not tsk or tsk.status == 'completed' or tsk.status == 'failed' then
-      table.insert(clearedTasks, taskId)
-      M.removeTab(taskId)
-    end
-  end
-
-  if #state.taskTabs == 0 then
-    state.focusId = nil
-    render.renderPlaceholder('All tasks cleared')
-    windows.focus('list')
-  elseif state.focusId and co.tsk.get(state.focusId) then
-    render.renderPanel(state.focusId, state.autoScroll)
-  end
-end
 
 return M

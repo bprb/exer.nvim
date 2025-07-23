@@ -191,6 +191,19 @@ function M.clearDones()
   return cleared
 end
 
+function M.clear(tid)
+  local tsk = tsks[tid]
+  if not tsk then return false end
+
+  -- Only clear completed or failed tasks, not running tasks
+  if tsk.status == STATUS.COMPLETED or tsk.status == STATUS.FAILED then
+    tsks[tid] = nil
+    log.info('Cleared task #' .. tid, 'Task')
+    return true
+  end
+  return false
+end
+
 function M.cntRunning()
   local count = 0
   for _, tsk in pairs(tsks) do

@@ -42,7 +42,12 @@ function M.run(config)
   local t = task.mk(cfg.name, cfg.cmd, taskOpts)
   task.run(t.id)
 
-  if cfg.showUI then require('exer.ui').showList() end
+  if cfg.showUI then
+    require('exer.ui').showList()
+    -- Auto focus the newly created task
+    local evts = require('exer.ui.events')
+    evts.setFocusTask(t.id, true)
+  end
 
   return t
 end

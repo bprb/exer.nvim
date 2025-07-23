@@ -15,7 +15,7 @@ A unified multi-language task executor for Neovim.
 - **Unified task management** – Consistent UI for compiling, executing, and testing  
 - **Project-aware configuration** – Auto-detects and runs project-specific tasks  
 - **Real-time output** – Live output with ANSI color support  
-- **Smart navigation** – Smooth window switching between editor and task views  
+- **Task navigation** – Smooth window switching between editor and task views (opt-in)  
 - **Extensible architecture** – Easily integrate with build tools and test frameworks  
 
 
@@ -72,14 +72,16 @@ Install with your favorite package manager:
     { "<leader>rx", "<cmd>ExerStop<cr>", desc = "Stop all running tasks" },
     { "<A-/>", "<cmd>ExerShow<cr>", desc = "Toggle task output window" },
     { "<C-w>t", "<cmd>ExerFocusUI<cr>", desc = "Focus task UI" },
-    { "<C-j>", "<cmd>ExerNavDown<cr>", desc = "Smart navigate down" },
-    { "<C-k>", "<cmd>ExerNavUp<cr>", desc = "Smart navigate up" },
-    { "<C-h>", "<cmd>ExerNavLeft<cr>", desc = "Smart navigate left" },
-    { "<C-l>", "<cmd>ExerNavRight<cr>", desc = "Smart navigate right" },
+    -- Task navigation (requires enable_navigation = true)
+    { "<C-j>", "<cmd>ExerNavDown<cr>", desc = "Task navigation down" },
+    { "<C-k>", "<cmd>ExerNavUp<cr>", desc = "Task navigation up" },
+    { "<C-h>", "<cmd>ExerNavLeft<cr>", desc = "Task navigation left" },
+    { "<C-l>", "<cmd>ExerNavRight<cr>", desc = "Task navigation right" },
   },
   config = function()
     require("exer").setup({
       debug = false,
+      enable_navigation = true,  -- Enable <C-hjkl> task navigation
       ui = {
         height = 0.4,
         list_width = 40,
@@ -87,7 +89,8 @@ Install with your favorite package manager:
         auto_scroll = true,
         keymaps = {
           stop_task = 's',        -- Use 's' instead of 'x' to stop tasks
-          clear_completed = 'd',   -- Use 'd' to clear completed tasks
+          clear_task = 'c',       -- Use 'c' to clear current task
+          clear_all_completed = 'C', -- Use 'C' to clear all completed tasks
           close_ui = '<Esc>',     -- Use Escape to close UI
           toggle_auto_scroll = 'a' -- Keep default 'a' for auto-scroll
         }
@@ -109,7 +112,8 @@ Install with your favorite package manager:
         auto_scroll = false,
         keymaps = {
           stop_task = 's',        -- Use 's' instead of 'x' to stop tasks
-          clear_completed = 'd',   -- Use 'd' to clear completed tasks
+          clear_task = 'c',       -- Use 'c' to clear current task
+          clear_all_completed = 'C', -- Use 'C' to clear all completed tasks
           close_ui = '<Esc>',     -- Use Escape to close UI
           toggle_auto_scroll = 'a' -- Keep default 'a' for auto-scroll
         }
@@ -137,11 +141,13 @@ Install with your favorite package manager:
 | `<leader>rx` | `:ExerStop`          | Stop all running tasks               |
 | `<A-/>`      | `:ExerShow`          | Toggle task output window            |
 | `<C-w>t`     | `:ExerFocusUI`       | Focus on task output window          |
-| `<C-hjkl>`   | Smart Navigation     | Navigate between editor and task UI  |
+| `<C-hjkl>`   | Task Navigation      | Navigate between editor and task UI (requires `enable_navigation = true`) |
 
-### Smart Navigation (`<C-hjkl>`)
+### Task Navigation (`<C-hjkl>`)
 
-The smart navigation feature provides seamless movement between your editor and the task UI:
+**Note:** Task navigation is disabled by default. To enable it, set `enable_navigation = true` in your setup.
+
+The task navigation feature provides seamless movement between your editor and the task UI:
 
 - **From editor**:
   - `<C-j>` or `<C-l>` - Move to task UI when it's open
@@ -170,6 +176,7 @@ To ensure exer.nvim's navigation works properly with vim-tmux-navigator, you can
 |--------|------|---------|-------------|
 | `debug` | `boolean` | `false` | Enable debug logging |
 | `disable_default_keymaps` | `boolean` | `false` | Disable all default keymaps |
+| `enable_navigation` | `boolean` | `false` | Enable task navigation keymaps (`<C-hjkl>`) |
 | `config_files` | `array` | `nil` | Custom config file search list (see below) |
 
 #### Custom Config Files
@@ -229,7 +236,8 @@ require('exer').setup({
 | Key | Default | Description |
 |-----|---------|-------------|
 | `stop_task` | `'x'` | Stop the selected/current task |
-| `clear_completed` | `'c'` | Clear all completed tasks |
+| `clear_task` | `'c'` | Clear the current task (completed/failed only) |
+| `clear_all_completed` | `'C'` | Clear all completed tasks |
 | `close_ui` | `'q'` | Close the task UI |
 | `toggle_auto_scroll` | `'a'` | Toggle auto-scroll in task panel |
 

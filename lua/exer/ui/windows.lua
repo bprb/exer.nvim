@@ -64,7 +64,7 @@ function M.createMain(cfg)
   local win_height, win_width = calcDims(cfg)
   local rowS, colS, wDtl = calcPos(win_height, win_width)
 
-  state.listB = createBuf('Raz Tasks', 'raz-tasks', false)
+  state.listB = createBuf('Tasks', 'raz-tasks', false)
   state.listW = vim.api.nvim_open_win(state.listB, true, {
     relative = 'editor',
     width = win_width,
@@ -78,7 +78,7 @@ function M.createMain(cfg)
   })
   syntax.apply(state.listB)
 
-  state.palB = createBuf('TaskPanel - Active', 'raz-panel', false)
+  state.palB = createBuf('TaskPanel', 'raz-panel', false)
   state.palW = vim.api.nvim_open_win(state.palB, false, {
     relative = 'editor',
     width = wDtl,
@@ -93,8 +93,6 @@ function M.createMain(cfg)
 
   vim.bo[state.palB].modifiable = true
   vim.api.nvim_buf_set_lines(state.palB, 0, -1, false, {
-    'TaskPanel',
-    '─────────────────────────────────────────',
     '',
     'Select a task from the list to view panel',
   })
@@ -121,7 +119,7 @@ end
 local function updateKeysContent(win_width)
   if not state.keysB or not vim.api.nvim_buf_is_valid(state.keysB) then return end
 
-  local txtKey = '󰌑:view  ' .. config.keymaps.stop_task .. ':stop  ' .. config.keymaps.clear_completed .. ':clear  ' .. config.keymaps.close_ui .. ':quit'
+  local txtKey = '󰌑:view  ' .. config.keymaps.stop_task .. ':stop  ' .. config.keymaps.clear_task .. '/' .. config.keymaps.clear_all_completed .. ':clear  ' .. config.keymaps.close_ui .. ':quit'
   local displayWidth = vim.fn.strdisplaywidth(txtKey)
   local fullWidth = win_width
   local totalPadding = fullWidth - displayWidth

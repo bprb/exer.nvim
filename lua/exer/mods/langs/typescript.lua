@@ -14,7 +14,6 @@ local Keys = {
 -- Language modules use fileTypes instead of detect() for matching
 M.fileTypes = { 'typescript', 'typescriptreact' }
 
-
 --========================================================================
 -- private
 --========================================================================
@@ -39,7 +38,6 @@ function M.getOpts(pathWorkDir, pathFile, fileType)
 
   return opts:build()
 end
-
 
 --========================================================================
 -- Acts

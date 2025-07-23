@@ -48,7 +48,6 @@ function M.parseApps(cnt)
   return apps
 end
 
-
 -- Parse complete [exer] block
 function M.parseExer(cnt)
   if not cnt or cnt == '' then return nil end

@@ -10,19 +10,7 @@ local function updatePanelFromCursor(skipFocus)
   local t = render.getSelectedTask()
   if t then
     events.setFocusTask(t.id)
-    if not skipFocus then
-      events.showTaskPanel(t.id)
-      -- For tabs functionality, update active tab when focusing a task
-      if events.hasMultipleTabs() then
-        local taskTabs = events.getTaskTabs()
-        for i, tabTaskId in ipairs(taskTabs) do
-          if tabTaskId == t.id then
-            events.switchTab(i)
-            break
-          end
-        end
-      end
-    end
+    if not skipFocus then events.showTaskPanel(t.id) end
     if windows.isValidBuf('panel') then render.renderPanel(t.id, events.getAutoScroll()) end
   end
   -- if no task is selected, keep current panel state unchanged
@@ -151,8 +139,24 @@ function M.setupListKeymaps(buffer)
     end
   end, opts)
 
-  -- Clear completed tasks
-  vim.keymap.set('n', config.keymaps.clear_completed, function()
+  -- Clear current task
+  vim.keymap.set('n', config.keymaps.clear_task, function()
+    local t = render.getSelectedTask()
+    if t then
+      if t.status == 'completed' or t.status == 'failed' then
+        co.tsk.clear(t.id)
+        render.renderList()
+        events.clearFocus()
+        render.renderPlaceholder('Cleared task #' .. t.id)
+        co.utils.msg('Cleared task #' .. t.id)
+      else
+        co.utils.msg('Cannot clear running task')
+      end
+    end
+  end, opts)
+
+  -- Clear all completed tasks
+  vim.keymap.set('n', config.keymaps.clear_all_completed, function()
     local tskSel = nil
     local focusId = events.getFocusTask()
     if focusId then tskSel = co.tsk.get(focusId) end
@@ -239,8 +243,25 @@ function M.setupPanelKeymaps(buffer)
     end
   end, opts)
 
-  -- Clear completed tasks
-  vim.keymap.set('n', config.keymaps.clear_completed, function()
+  -- Clear current task
+  vim.keymap.set('n', config.keymaps.clear_task, function()
+    local focusId = events.getFocusTask()
+    if focusId then
+      local t = co.tsk.get(focusId)
+      if t and (t.status == 'completed' or t.status == 'failed') then
+        co.tsk.clear(focusId)
+        render.renderList()
+        events.clearFocus()
+        windows.focus('list')
+        co.utils.msg('Cleared task #' .. focusId)
+      else
+        co.utils.msg('Cannot clear running task')
+      end
+    end
+  end, opts)
+
+  -- Clear all completed tasks
+  vim.keymap.set('n', config.keymaps.clear_all_completed, function()
     local t = nil
     local focusId = events.getFocusTask()
     if focusId then t = co.tsk.get(focusId) end
@@ -345,16 +366,6 @@ function M.setupPanelKeymaps(buffer)
       if windows.isValid('list') then windows.focus('list') end
     end
   end, opts)
-
-  -- Tab switching (only when multiple tabs exist)
-  for i = 1, 9 do
-    vim.keymap.set('n', tostring(i), function()
-      if events.hasMultipleTabs() then
-        local taskId = events.switchTab(i)
-        if taskId then render.renderPanel(taskId, events.getAutoScroll()) end
-      end
-    end, opts)
-  end
 
   -- Smart navigation
   vim.keymap.set('n', '<C-h>', function() M.smartNav('left') end, opts)

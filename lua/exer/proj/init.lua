@@ -95,9 +95,6 @@ function M.expandVars(cmd) return var.expandVars(cmd) end
 
 function M.validate(cfg) return vad.validate(cfg) end
 
-
-
-
 function M.processApps(apps, ft) return tsk.processApps(apps, ft) end
 
 function M.getActs(ft)

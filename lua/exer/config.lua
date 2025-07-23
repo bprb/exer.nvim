@@ -3,6 +3,7 @@ local M = {}
 local defaults = {
   debug = false,
   disable_default_keymaps = false,
+  enable_navigation = false,
   config_files = nil,
   ui = {
     height = 0.3,
@@ -16,10 +17,10 @@ local defaults = {
     { '<leader>rx', 'ExerStop', 'Stop all running tasks' },
     { '<A-/>', 'ExerShow', 'Toggle task output window' },
     { '<C-w>t', 'ExerFocusUI', 'Focus task UI' },
-    { '<C-j>', 'ExerNavDown', 'Smart navigate down' },
-    { '<C-k>', 'ExerNavUp', 'Smart navigate up' },
-    { '<C-h>', 'ExerNavLeft', 'Smart navigate left' },
-    { '<C-l>', 'ExerNavRight', 'Smart navigate right' },
+    { '<C-j>', 'ExerNavDown', 'Task navigation down' },
+    { '<C-k>', 'ExerNavUp', 'Task navigation up' },
+    { '<C-h>', 'ExerNavLeft', 'Task navigation left' },
+    { '<C-l>', 'ExerNavRight', 'Task navigation right' },
   },
 }
 
@@ -62,12 +63,18 @@ function M.setupKeymaps()
     vim.defer_fn(function()
       for _, keyDef in ipairs(options.keymaps) do
         local lhs, cmd, desc = keyDef[1], keyDef[2], keyDef[3]
+
+        -- Skip navigation keymaps if not enabled
+        if not options.enable_navigation and (cmd == 'ExerNavDown' or cmd == 'ExerNavUp' or cmd == 'ExerNavLeft' or cmd == 'ExerNavRight') then goto continue end
+
         -- Always set the keymap to override existing mappings
         vim.api.nvim_set_keymap('n', lhs, '<cmd>' .. cmd .. '<cr>', {
           noremap = true,
           silent = true,
           desc = desc,
         })
+
+        ::continue::
       end
     end, 100) -- Delay 100ms to ensure we run after other plugins
   end
