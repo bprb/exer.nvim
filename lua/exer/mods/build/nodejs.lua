@@ -2,6 +2,7 @@ local M = {}
 
 local Keys = {
   install = 'node:install',
+  runFile = 'node:runFile',
 }
 
 --========================================================================
@@ -52,6 +53,9 @@ function M.getOpts(pathWorkDir, pathFile, fileType)
     end
   end
 
+  -- Add run file option for JavaScript files
+  if pathFile and (pathFile:match('%.js$') or pathFile:match('%.mjs$')) then opts:addMod('Run file', Keys.runFile, 'nodejs', nil, 'node <file>') end
+
   return opts:build()
 end
 
@@ -70,6 +74,10 @@ function M.runAct(option, pathWorkDir, pathFile)
   if option == Keys.install then
     name = 'NodeJS: Install Dependencies'
     cmd = 'npm install'
+  elseif option == Keys.runFile then
+    local filename = vim.fn.fnamemodify(pathFile, ':t')
+    name = 'Run "' .. filename .. '"'
+    cmd = 'node "' .. pathFile .. '"'
   elseif option:match('^node:script:(.+)$') then
     local script = option:match('^node:script:(.+)$')
     name = 'NodeJS: Run ' .. script
