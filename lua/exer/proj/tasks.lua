@@ -20,7 +20,7 @@ function M.processApps(apps, _)
     -- Only support custom run commands now
     if app.run_cmd then
       table.insert(acts, {
-        id = string.format('run: %s', app.name),
+        id = string.format('run_%s', app.name:gsub('%s+', '_')),
         name = string.format('[Run] %s', app.name),
         cmd = app.run_cmd,
         type = 'app_run',
