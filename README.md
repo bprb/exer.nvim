@@ -1,6 +1,6 @@
 # exer.nvim
 
-A unified multi-language task executor for Neovim.
+A unified simple task executor for Neovim.
 
 <p align="center">
 	<p align="center">
@@ -8,16 +8,14 @@ A unified multi-language task executor for Neovim.
 	</p>
 </p>
 
-
 ## Features
 
-- **Multi-language support** – Run code across multiple languages through a single interface  
-- **Unified task management** – Consistent UI for compiling, executing, and testing  
-- **Project-aware configuration** – Auto-detects and runs project-specific tasks  
-- **Real-time output** – Live output with ANSI color support  
-- **Task navigation** – Smooth window switching between editor and task views (opt-in)  
-- **Extensible architecture** – Easily integrate with build tools and test frameworks  
-
+- **Multi-language support** – Run code across multiple languages through a single interface
+- **Unified task management** – Consistent UI for compiling, executing, and testing
+- **Project-aware configuration** – Auto-detects and runs project-specific tasks
+- **Real-time output** – Live output with ANSI color support
+- **Task navigation** – Smooth window switching between editor and task views (opt-in)
+- **Extensible architecture** – Easily integrate with build tools and test frameworks
 
 <p align="center">
 	<p align="center">
@@ -28,12 +26,15 @@ A unified multi-language task executor for Neovim.
 ## Requirements
 
 - **Neovim** >= 0.10.0
-- A [Nerd Font](https://www.nerdfonts.com/) (for proper icon display)  
-
+- A [Nerd Font](https://www.nerdfonts.com/) (for proper icon display)
 
 ## Development Status
 
 ⚠️ **Work in Progress** – This plugin is under active development and subject to change.
+
+**Note:** This is still early in development - I've only implemented a basic set of features so far. Contributions are very welcome! Whether it's bug reports, feature suggestions, or pull requests, I'd appreciate any help to make this plugin better.
+
+It's a work in progress, but if you're looking for a simple way to run tasks across different languages and projects, give it a try!
 
 ### Compilation System
 
@@ -46,8 +47,6 @@ If you have suggestions for a better compilation system design or would like to 
 - Cross-platform compatibility
 - Performance optimization strategies
 
-
-
 ## Installation
 
 Install with your favorite package manager:
@@ -55,7 +54,7 @@ Install with your favorite package manager:
 ### [lazy.nvim](https://github.com/folke/lazy.nvim)
 
 ```lua
--- Option 1: Use default keymaps (automatic)
+-- Option 1: Basic setup (uses all defaults)
 {
   "RazgrizHsu/exer.nvim",
   config = function()
@@ -63,9 +62,10 @@ Install with your favorite package manager:
   end,
 }
 
--- Option 2: Custom keymaps via keys table
+-- Option 2: Full configuration with all available options
 {
   "RazgrizHsu/exer.nvim",
+  -- Lazy-load on specific keymaps (optional)
   keys = {
     { "<leader>ro", "<cmd>ExerOpen<cr>", desc = "Open task picker" },
     { "<leader>rr", "<cmd>ExerRedo<cr>", desc = "Re-run last task" },
@@ -80,68 +80,57 @@ Install with your favorite package manager:
   },
   config = function()
     require("exer").setup({
-      debug = false,
-      enable_navigation = true,  -- Enable <C-hjkl> task navigation
-      ui = {
-        height = 0.4,
-        list_width = 40,
-        auto_toggle = false,
-        auto_scroll = true,
-        keymaps = {
-          stop_task = 's',        -- Use 's' instead of 'x' to stop tasks
-          clear_task = 'c',       -- Use 'c' to clear current task
-          clear_all_completed = 'C', -- Use 'C' to clear all completed tasks
-          close_ui = '<Esc>',     -- Use Escape to close UI
-          toggle_auto_scroll = 'a' -- Keep default 'a' for auto-scroll
-        }
-      },
-    })
-  end,
-}
+      -- Core settings
+      debug = false,                    -- Enable debug logging (default: false)
+      disable_default_keymaps = false,  -- Disable default keymaps (default: false)
+      enable_navigation = true,         -- Enable <C-hjkl> navigation (default: false)
+      enable_builtin_mods = true,       -- Enable built-in language modules (default: true)
 
--- Option 3: Disable default keymaps completely
-{
-  "RazgrizHsu/exer.nvim",
-  config = function()
-    require("exer").setup({
-      disable_default_keymaps = true,
+      -- Custom config files (default: searches for exer.toml, exer.json, etc.)
+      config_files = {
+        "tasks.toml",                   -- Custom filename
+        ".config/exer.json",            -- Subdirectory
+        { path = "pyproject.toml", section = "tool.exec" }  -- Embedded config
+      },
+
+      -- UI settings
       ui = {
-        height = 30,          -- Fixed height: 30 lines
-        list_width = 0.25,    -- List width: 25% of editor width
-        auto_toggle = true,
-        auto_scroll = false,
+        height = 0.3,       -- UI height: 0.0-1.0 = percentage, >1 = fixed lines (default: 0.3 = 30%, or use 30 for 30 lines)
+        list_width = 36,    -- Task list width: 0.0-1.0 = percentage, >1 = fixed columns (default: 36 columns, or use 0.25 for 25%)
+        auto_toggle = true, -- Auto open UI when task starts (default: true)
+        auto_scroll = true, -- Auto scroll to latest output (default: true)
+
+        -- Custom keymaps within UI
         keymaps = {
-          stop_task = 's',        -- Use 's' instead of 'x' to stop tasks
-          clear_task = 'c',       -- Use 'c' to clear current task
-          clear_all_completed = 'C', -- Use 'C' to clear all completed tasks
-          close_ui = '<Esc>',     -- Use Escape to close UI
-          toggle_auto_scroll = 'a' -- Keep default 'a' for auto-scroll
+          stop_task = 'x',           -- Stop selected task (default: 'x')
+          clear_task = 'c',          -- Clear completed task (default: 'c')
+          clear_all_completed = 'C', -- Clear all completed (default: 'C')
+          close_ui = 'q',            -- Close UI window (default: 'q')
+          toggle_auto_scroll = 'a'   -- Toggle auto-scroll (default: 'a')
         }
       },
     })
-    -- Set your own keymaps
-    vim.keymap.set("n", "<leader>er", "<cmd>ExerOpen<cr>", { desc = "Open exer" })
   end,
 }
 ```
 
 ## Quick Start
 
-1. Open a source file in Neovim  
-2. Press `<leader>ro` to open the task picker  
-3. Select a task to execute  
-4. View output in the task window  
+1. Open a source file in Neovim
+2. Press `<leader>ro` to open the task picker
+3. Select a task to execute
+4. View output in the task window
 
 ## Key Bindings
 
-| Key          | Command              | Description                          |
-|--------------|----------------------|--------------------------------------|
-| `<leader>ro` | `:ExerOpen`          | Open task picker                     |
-| `<leader>rr` | `:ExerRedo`          | Re-run the last task                 |
-| `<leader>rx` | `:ExerStop`          | Stop all running tasks               |
-| `<A-/>`      | `:ExerShow`          | Toggle task output window            |
-| `<C-w>t`     | `:ExerFocusUI`       | Focus on task output window          |
-| `<C-hjkl>`   | Task Navigation      | Navigate between editor and task UI (requires `enable_navigation = true`) |
+| Key          | Command         | Description                                                               |
+| ------------ | --------------- | ------------------------------------------------------------------------- |
+| `<leader>ro` | `:ExerOpen`     | Open task picker                                                          |
+| `<leader>rr` | `:ExerRedo`     | Re-run the last task                                                      |
+| `<leader>rx` | `:ExerStop`     | Stop all running tasks                                                    |
+| `<A-/>`      | `:ExerShow`     | Toggle task output window                                                 |
+| `<C-w>t`     | `:ExerFocusUI`  | Focus on task output window                                               |
+| `<C-hjkl>`   | Task Navigation | Navigate between editor and task UI (requires `enable_navigation = true`) |
 
 ### Task Navigation (`<C-hjkl>`)
 
@@ -160,11 +149,13 @@ The task navigation feature provides seamless movement between your editor and t
   - `<C-j>` - Return to editor window
 
 **Note**: If you're using vim-tmux-navigator or similar plugins that bind `<C-hjkl>`, exer.nvim will intelligently defer to them when appropriate. The plugin will:
+
 1. First try standard Vim window navigation
 2. If that fails and you have tmux-navigator, it will try tmux navigation
 3. Finally, if still in the same window and task UI is open, it will navigate to the task UI
 
 To ensure exer.nvim's navigation works properly with vim-tmux-navigator, you can either:
+
 - Load exer.nvim after tmux-navigator (add `dependencies = { "christoomey/vim-tmux-navigator" }` to your config)
 - Or disable specific tmux-navigator keymaps that you want exer.nvim to handle
 
@@ -172,16 +163,18 @@ To ensure exer.nvim's navigation works properly with vim-tmux-navigator, you can
 
 ### Plugin Setup Options
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `debug` | `boolean` | `false` | Enable debug logging |
-| `disable_default_keymaps` | `boolean` | `false` | Disable all default keymaps |
-| `enable_navigation` | `boolean` | `false` | Enable task navigation keymaps (`<C-hjkl>`) |
-| `config_files` | `array` | `nil` | Custom config file search list (see below) |
+| Option                    | Type      | Default | Description                                 |
+| ------------------------- | --------- | ------- | ------------------------------------------- |
+| `debug`                   | `boolean` | `false` | Enable debug logging                        |
+| `disable_default_keymaps` | `boolean` | `false` | Disable all default keymaps                 |
+| `enable_navigation`       | `boolean` | `false` | Enable task navigation keymaps (`<C-hjkl>`) |
+| `enable_builtin_mods`     | `boolean` | `true`  | Enable built-in language/tool modules       |
+| `config_files`            | `array`   | `nil`   | Custom config file search list (see below)  |
 
 #### Custom Config Files
 
 By default, exer.nvim searches for configuration files in this order:
+
 1. `proj.toml`
 2. `exer.toml`
 3. `exer.json`
@@ -216,6 +209,7 @@ require('exer').setup({
 ```
 
 **Options:**
+
 - **String format**: Relative paths are resolved from project root
 - **Table format**: Use `path` and `section` for embedded configurations
 - **Search order**: Files are searched in the order specified
@@ -223,25 +217,23 @@ require('exer').setup({
 
 ### UI Configuration
 
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `ui.height` | `number` | `0.3` | UI height. Values 0.0-1.0 = percentage, >1 = fixed lines |
-| `ui.list_width` | `number` | `36` | Task list width. Values 0.0-1.0 = percentage, >1 = fixed columns |
-| `ui.auto_toggle` | `boolean` | `true` | Automatically open UI when a task starts |
-| `ui.auto_scroll` | `boolean` | `true` | Automatically scroll task panel to show latest output |
-| `ui.keymaps` | `table` | See below | Custom keymaps for UI interactions |
+| Option           | Type      | Default   | Description                                                      |
+| ---------------- | --------- | --------- | ---------------------------------------------------------------- |
+| `ui.height`      | `number`  | `0.3`     | UI height. Values 0.0-1.0 = percentage, >1 = fixed lines         |
+| `ui.list_width`  | `number`  | `36`      | Task list width. Values 0.0-1.0 = percentage, >1 = fixed columns |
+| `ui.auto_toggle` | `boolean` | `true`    | Automatically open UI when a task starts                         |
+| `ui.auto_scroll` | `boolean` | `true`    | Automatically scroll task panel to show latest output            |
+| `ui.keymaps`     | `table`   | See below | Custom keymaps for UI interactions                               |
 
 #### UI Keymaps
 
-| Key | Default | Description |
-|-----|---------|-------------|
-| `stop_task` | `'x'` | Stop the selected/current task |
-| `clear_task` | `'c'` | Clear the current task (completed/failed only) |
-| `clear_all_completed` | `'C'` | Clear all completed tasks |
-| `close_ui` | `'q'` | Close the task UI |
-| `toggle_auto_scroll` | `'a'` | Toggle auto-scroll in task panel |
-
-
+| Key                   | Default | Description                                    |
+| --------------------- | ------- | ---------------------------------------------- |
+| `stop_task`           | `'x'`   | Stop the selected/current task                 |
+| `clear_task`          | `'c'`   | Clear the current task (completed/failed only) |
+| `clear_all_completed` | `'C'`   | Clear all completed tasks                      |
+| `close_ui`            | `'q'`   | Close the task UI                              |
+| `toggle_auto_scroll`  | `'a'`   | Toggle auto-scroll in task panel               |
 
 ### Project Configuration
 
@@ -252,6 +244,7 @@ exer.nvim supports project-specific task configuration through configuration fil
 Use `${variable}` syntax in commands:
 
 **File Variables**
+
 - `${file}` - Full path of current buffer
 - `${filename}` - Filename with extension (no path)
 - `${name}` - Filename without extension
@@ -261,19 +254,20 @@ Use `${variable}` syntax in commands:
 - `${stem}` - Filename with extension
 
 **Path Variables**
+
 - `${dir}` - Directory of current file
 - `${root}` - Project root directory
 - `${cwd}` - Current working directory
 - `${dirname}` - Current directory name
 
 **System Variables**
+
 - `${servername}` - Vim/Neovim server name
-
-
 
 #### Basic Task Configuration
 
 **TOML Format (exer.toml):**
+
 ```toml
 [exer]
 # Single command tasks
@@ -325,6 +319,7 @@ desc = "Compile and show status"
 ```
 
 **JSON Format (exer.json):**
+
 ```json
 {
   "exer": {
@@ -344,10 +339,7 @@ desc = "Compile and show status"
       },
       {
         "id": "build_and_run",
-        "cmd": [
-          "gcc ${name}.c -o ${name}",
-          "./${name}"
-        ],
+        "cmd": ["gcc ${name}.c -o ${name}", "./${name}"],
         "desc": "Build and run C program",
         "env": {
           "DEBUG": "1",
@@ -356,10 +348,7 @@ desc = "Compile and show status"
       },
       {
         "id": "check_all",
-        "cmds": [
-          "gcc -fsyntax-only ${file}",
-          "cppcheck ${file}"
-        ],
+        "cmds": ["gcc -fsyntax-only ${file}", "cppcheck ${file}"],
         "desc": "Run syntax and static analysis in parallel"
       },
       {
@@ -368,7 +357,7 @@ desc = "Compile and show status"
         "desc": "Compile C file"
       },
       {
-        "id": "full_build", 
+        "id": "full_build",
         "cmd": ["cmd:compile", "echo 'Build complete'"],
         "desc": "Compile and show status"
       }
@@ -377,10 +366,10 @@ desc = "Compile and show status"
 }
 ```
 
-
 #### Configuration Options
 
 **Task Options (acts)**
+
 - `id` - Unique task identifier (required)
 - `cmd` / `cmds` - Command specification (required, see details below)
 - `desc` - Task description
@@ -410,12 +399,14 @@ Commands can be specified in multiple formats:
 ```
 
 **Execution Modes:**
+
 - **`cmd`**: Sequential execution (stops on first failure)
 - **`cmds`**: Parallel execution (runs all commands simultaneously)
 - **Task references** (`cmd:task_id`): Execute another defined task
 - **Mixed arrays**: Combine direct commands and task references
 
 **Task References:**
+
 ```toml
 [exer]
 acts = [
@@ -425,10 +416,10 @@ acts = [
 ]
 ```
 
-
 #### Complete Example
 
 **TOML Format:**
+
 ```toml
 [exer]
 # Language-specific tasks
@@ -436,15 +427,15 @@ acts = [
   # Python
   { id = "run_py", cmd = "python ${file}", desc = "Run Python", when = "python" },
   { id = "test_py", cmd = "pytest ${file} -v", desc = "Test Python", when = "python" },
-  
+
   # JavaScript/TypeScript
   { id = "run_js", cmd = "node ${file}", desc = "Run JS", when = "javascript" },
   { id = "run_ts", cmd = "tsx ${file}", desc = "Run TS", when = "typescript" },
-  
+
   # C/C++
   { id = "compile_c", cmd = "gcc ${file} -o ${name}", desc = "Compile C", when = "c" },
   { id = "compile_cpp", cmd = "g++ ${file} -o ${name}", desc = "Compile C++", when = "cpp" },
-  
+
   # Go
   { id = "run_go", cmd = "go run ${file}", desc = "Run Go", when = "go" },
   { id = "test_go", cmd = "go test ./...", desc = "Test Go", when = "go" }
@@ -463,6 +454,7 @@ desc = "Run all tests"
 ```
 
 **JSON Format:**
+
 ```json
 {
   "exer": {
@@ -506,12 +498,10 @@ desc = "Run all tests"
 }
 ```
 
-
-
 ## Developer Notes
 
 > As a long-time JetBrains user transitioning to Neovim, I found no task executor that matched my workflow.  
-> Inspired by the amazing plugins from the community, I decided to build one myself — and thus, *exer.nvim* was born.  
+> Inspired by the amazing plugins from the community, I decided to build one myself — and thus, _exer.nvim_ was born.  
 > This project is still evolving, and there's much room for improvement.  
 > If it ends up helping even just one person, I'd consider it a success.
 

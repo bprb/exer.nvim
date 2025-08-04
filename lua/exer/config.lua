@@ -4,6 +4,7 @@ local defaults = {
   debug = false,
   disable_default_keymaps = false,
   enable_navigation = false,
+  enable_builtin_mods = true,
   config_files = nil,
   ui = {
     height = 0.3,

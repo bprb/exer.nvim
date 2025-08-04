@@ -90,9 +90,7 @@ local function validateAct(act)
   if not act.id and not act.name then return false, 'act.id or act.name is required' end
 
   -- Normalize id by replacing spaces with underscores
-  if act.id and type(act.id) == 'string' then
-    act.id = act.id:gsub('%s+', '_')
-  end
+  if act.id and type(act.id) == 'string' then act.id = act.id:gsub('%s+', '_') end
 
   if act.id and not isValidId(act.id) then return false, 'act.id must be a valid identifier after normalization, get: [' .. vim.inspect(act.id) .. ']' end
 

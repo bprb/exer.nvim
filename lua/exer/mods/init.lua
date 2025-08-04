@@ -1,5 +1,6 @@
 local M = {}
 local co = require('exer.core')
+local utils = require('exer.core.utils')
 
 local excludeDirs = { 'node_modules', '.git', 'tmp', '.vscode', 'dist' }
 
@@ -66,7 +67,7 @@ end
 function M.search(category, modName)
   local pathL = debug.getinfo(1, 'S').source:sub(2)
   local pathLDir = pathL:match('(.*[/\\\\])')
-  local pathModFile = co.utils.osPath(pathLDir .. category .. '/' .. modName .. '.lua')
+  local pathModFile = utils.osPath(pathLDir .. category .. '/' .. modName .. '.lua')
   local ok, mod = pcall(dofile, pathModFile)
 
   if ok then

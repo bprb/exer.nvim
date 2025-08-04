@@ -31,12 +31,7 @@ acts = [
     cwd = '/test/project',
     currentFile = 'test.py',
     files = {
-      ['exer.toml'] = '[exer]\n' ..
-        '[[apps]]\n' ..
-        'name = "My Test App"\n' ..
-        'entry = "main.py"\n' ..
-        'output = "dist/app"\n' ..
-        'run_cmd = "python main.py"\n',
+      ['exer.toml'] = '[exer]\n' .. '[[apps]]\n' .. 'name = "My Test App"\n' .. 'entry = "main.py"\n' .. 'output = "dist/app"\n' .. 'run_cmd = "python main.py"\n',
       ['test.py'] = 'print("hello")',
     },
   }, function()

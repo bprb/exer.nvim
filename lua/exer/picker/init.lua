@@ -85,14 +85,19 @@ function M.show()
   co.lg.debug(string.format('Added %d valid proj tasks out of %d', validProjCount, #projActs), 'Picker')
 
   -- add module tasks (languages, build tools and test frameworks)
-  local optsMods = mods.getOpts(ft)
-  co.lg.debug('Found ' .. #optsMods .. ' mods options', 'Picker')
+  local config = require('exer.config').get()
+  if config.enable_builtin_mods then
+    local optsMods = mods.getOpts(ft)
+    co.lg.debug('Found ' .. #optsMods .. ' mods options', 'Picker')
 
-  -- add separator only if both proj tasks and mod tasks exist
-  if #projActs > 0 and #optsMods > 0 then table.insert(optsLang, { text = '', value = 'separator' }) end
+    -- add separator only if both proj tasks and mod tasks exist
+    if #projActs > 0 and #optsMods > 0 then table.insert(optsLang, { text = '', value = 'separator' }) end
 
-  for _, item in ipairs(optsMods) do
-    table.insert(optsLang, item)
+    for _, item in ipairs(optsMods) do
+      table.insert(optsLang, item)
+    end
+  else
+    co.lg.debug('Built-in modules disabled by config', 'Picker')
   end
 
   co.lg.debug('Total options available: ' .. #optsLang, 'Picker')
