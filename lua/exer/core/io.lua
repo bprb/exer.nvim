@@ -73,11 +73,10 @@ end
 ---@return string Project root path
 function M.getRoot()
   local cwd = vim.fn.getcwd()
-  local git_cmd = 'git rev-parse --show-toplevel '
-  if vim.loop.os_uname().sysname:find("Windows") == 0 then
-    git_cmd = git_cmd .. '2>/dev/null'
-  end
-  local gitRoot = vim.fn.systemlist(git_cmd)[1]
+  local cmd = vim.loop.os_uname().sysname == 'Windows_NT'
+    and 'git rev-parse --show-toplevel 2>NUL'
+    or  'git rev-parse --show-toplevel 2>/dev/null'
+  local gitRoot = vim.fn.systemlist(cmd)[1]
 
   if gitRoot and gitRoot ~= '' then return gitRoot end
 
